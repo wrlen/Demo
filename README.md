@@ -191,6 +191,165 @@ PORT=8000
 - `GET /projects/{id}/characters` - 获取角色列表
 - `POST /projects/{id}/generate-images` - 生成图像
 
+## GitHub部署
+
+### 方式1：GitHub Actions自动部署到服务器
+
+项目已配置GitHub Actions，可以实现代码推送到GitHub后自动部署到服务器。
+
+#### 配置步骤
+
+1. **创建GitHub仓库**
+   - 访问 https://github.com/new
+   - 创建新仓库（例如：`trae-demo`）
+   - **不要**初始化README、.gitignore或LICENSE
+
+2. **推送代码到GitHub**
+   ```bash
+   git remote add origin https://github.com/你的用户名/trae-demo.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. **配置GitHub Secrets**
+   - 进入仓库的 Settings → Secrets and variables → Actions
+   - 添加以下Secrets：
+
+   | Secret名称 | 说明 | 示例 |
+   |-----------|------|------|
+   | `SERVER_HOST` | 服务器IP地址 | `123.456.789.0` |
+   | `SERVER_USER` | SSH用户名 | `root` 或 `ubuntu` |
+   | `SSH_PRIVATE_KEY` | SSH私钥内容 | `-----BEGIN OPENSSH PRIVATE KEY-----...` |
+   | `SSH_PORT` | SSH端口（可选） | `22` |
+   | `PROJECT_PATH` | 项目在服务器上的路径 | `/home/user/trae-demo` |
+   | `DOCKER_USERNAME` | Docker Hub用户名 | `yourusername` |
+   | `DOCKER_PASSWORD` | Docker Hub密码或token | `dckr_pat_...` |
+
+4. **配置服务器SSH密钥**
+   ```bash
+   # 在本地生成SSH密钥对（如果还没有）
+   ssh-keygen -t rsa -b 4096 -C "github-actions"
+
+   # 将公钥复制到服务器
+   ssh-copy-id user@your-server-ip
+
+   # 将私钥内容复制到GitHub Secret
+   cat ~/.ssh/id_rsa
+   ```
+
+5. **触发部署**
+   - 推送代码到main分支会自动触发部署
+   - 或在GitHub Actions页面手动触发
+
+6. **查看部署状态**
+   - 访问仓库的 Actions 页面
+   - 查看 "Deploy to Production" 工作流的执行状态
+
+#### GitHub Actions工作流
+
+项目包含三个GitHub Actions工作流：
+
+| 工作流 | 触发条件 | 说明 |
+|--------|---------|------|
+| `deploy.yml` | 推送到main分支 | 自动部署到生产服务器 |
+| `ci.yml` | 推送到任何分支 | 运行测试和代码检查 |
+| `docker.yml` | 推送到main分支或打标签 | 构建并推送Docker镜像到Docker Hub |
+
+### 方式2：使用Docker Hub镜像
+
+项目会自动构建Docker镜像并推送到Docker Hub：
+
+```bash
+# 拉取最新镜像
+docker pull yourusername/trae-backend:latest
+docker pull yourusername/trae-celery:latest
+docker pull yourusername/trae-frontend:latest
+
+# 使用镜像部署
+docker run -d -p 8000:8000 yourusername/trae-backend:latest
+```
+
+### 方式3：Vercel部署（仅前端）
+
+1. 访问 https://vercel.com
+2. 导入GitHub仓库
+3. Vercel会自动检测Next.js并配置
+4. 配置环境变量 `NEXT_PUBLIC_API_URL`
+5. 点击部署
+
+## Docker部署
+
+### 快速启动
+
+```bash
+# 配置环境变量
+cp backend/.env.example backend/.env
+# 编辑 backend/.env，填入你的 API_KEY
+
+# 启动所有服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 访问应用
+# 前端：http://localhost
+# 后端API：http://localhost/api
+# API文档：http://localhost/api/docs
+```
+
+### 服务架构
+
+```
+┌─────────────────────────────────────────┐
+│           Nginx (端口80)                │
+│   反向代理 + 负载均衡 + 静态文件        │
+└────────┬──────────────────────────────┘
+         │
+    ┌────┴────┬──────────────┐
+    ▼         ▼              ▼
+┌────────┐ ┌────────┐  ┌────────┐
+│ 前端   │ │ 后端   │  │ Celery │
+│ :3000  │ │ :8000  │  │ Worker │
+└────────┘ └───┬────┘  └────────┘
+              │
+              ▼
+         ┌────────┐
+         │ Redis  │
+         │ :6379  │
+         └────────┘
+```
+
+### 常用Docker命令
+
+```bash
+# 启动所有服务
+docker-compose up -d
+
+# 停止所有服务
+docker-compose down
+
+# 重启特定服务
+docker-compose restart backend
+
+# 查看日志
+docker-compose logs -f [service-name]
+
+# 进入容器
+docker-compose exec backend bash
+
+# 更新并重新构建
+docker-compose pull
+docker-compose up -d --build
+
+# 清理未使用的资源
+docker system prune -a
+```
+
+## 详细部署文档
+
+更多部署细节请参考：[部署指南](docs/DEPLOYMENT.md)
+
 ## 常见问题
 
 ### 1. Redis连接失败
