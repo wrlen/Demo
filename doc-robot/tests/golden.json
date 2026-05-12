@@ -1,0 +1,32 @@
+[
+  {
+    "question": "如何配置数据库连接？",
+    "expected_answer_contains": ["数据库", "连接", "配置"],
+    "expected_sources": ["database-config.md"],
+    "description": "数据库配置问题的端到端测试"
+  },
+  {
+    "question": "API 认证方式是什么？",
+    "expected_answer_contains": ["认证", "Token", "OAuth"],
+    "expected_sources": [],
+    "description": "API 认证相关查询"
+  },
+  {
+    "question": "系统有哪些部署方式？",
+    "expected_answer_contains": ["部署", "Docker"],
+    "expected_sources": [],
+    "description": "部署方式查询"
+  },
+  {
+    "question": "文档中没有的虚构功能怎么实现？",
+    "expected_answer_contains": ["未找到"],
+    "expected_sources": [],
+    "description": "幻觉测试——期望回答明确说找不到"
+  },
+  {
+    "question": "错误码500是什么意思？",
+    "expected_answer_contains": ["错误"],
+    "expected_sources": [],
+    "description": "错误码查询"
+  }
+]
