@@ -1,0 +1,10 @@
+# .gitignore
+venv/
+.env
+__pycache__/
+*.pyc
+.DS_Store
+chroma_db/
+.idea/
+customer_service.db
+*.db

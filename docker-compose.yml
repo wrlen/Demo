@@ -1,0 +1,17 @@
+# docker-compose.yml
+# 用 docker-compose 可以一键启动，比手敲 docker run 方便
+
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: smart-cs
+    ports:
+      - "8000:8000"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}  # 从 .env 读取
+    volumes:
+      - ./chroma_db:/app/chroma_db   # 知识库持久化
+      - ./customer_service.db:/app/customer_service.db  # 数据库持久化
+    restart: unless-stopped
