@@ -1,8 +1,21 @@
+import os
+import ssl
+from pathlib import Path
+
+# 设置环境变量 - 强制使用本地缓存
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+os.environ["SENTENCE_TRANSFORMERS_HOME"] = str(Path.home() / ".cache" / "huggingface" / "hub")
+ssl._create_default_https_context = ssl._create_unverified_context
+
 from sentence_transformers import SentenceTransformer, CrossEncoder
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from rank_bm25 import BM25Okapi
 import jieba
+
+from modules import logger
 
 from config import (
     EMBEDDING_MODEL,
@@ -24,7 +37,7 @@ class HybridRetriever:
     """混合检索器：BM25 关键词 + 语义向量 + 重排序。"""
 
     def __init__(self):
-        # Embedding 模型
+        # Embedding 模型 - 环境变量已配置为使用本地缓存
         self.embed_model = SentenceTransformer(EMBEDDING_MODEL, device=EMBEDDING_DEVICE)
 
         # ChromaDB
@@ -42,14 +55,16 @@ class HybridRetriever:
             tokenized = [_tokenize(d) for d in self.all_docs]
             self.bm25 = BM25Okapi(tokenized)
 
-        # Reranker
-        self.reranker = CrossEncoder(
-            RERANKER_MODEL,
-            device=RERANKER_DEVICE,
-        )
+        # Reranker - 尝试加载，如果失败则跳过
+        self.reranker = None
+        try:
+            self.reranker = CrossEncoder(RERANKER_MODEL, device=RERANKER_DEVICE)
+        except Exception as e:
+            logger.warning(f"Reranker 模型加载失败，将跳过重排序: {e}")
 
-    def retrieve(self, query: str) -> list[dict]:
-        """返回 Top-{RERANK_TOP_K} 结果，每项含 content / filename / h2 / h3 / score。"""
+    def retrieve(self, query: str, top_k: int = None) -> list[dict]:
+        """返回 Top-N 结果，每项含 content / filename / h2 / h3 / score。"""
+        k = top_k or RERANK_TOP_K
         # 1. BM25 关键词检索
         bm25_results: list[tuple[int, float]] = []
         if self.all_docs:
@@ -98,15 +113,23 @@ class HybridRetriever:
         if not candidates:
             return []
 
-        # 4. Reranker 重排序
-        pairs = [[query, c["content"]] for c in candidates]
-        rerank_scores = self.reranker.predict(pairs)
+        # 4. Reranker 重排序（如果可用）
+        if self.reranker:
+            pairs = [[query, c["content"]] for c in candidates]
+            rerank_scores = self.reranker.predict(pairs)
 
-        for c, score in zip(candidates, rerank_scores):
-            c["score"] = float(score)
+            for c, score in zip(candidates, rerank_scores):
+                c["score"] = float(score)
 
-        candidates.sort(key=lambda x: x["score"], reverse=True)
-        top5 = candidates[:RERANK_TOP_K]
+            candidates.sort(key=lambda x: x["score"], reverse=True)
+            top5 = candidates[:k]
+        else:
+            # 如果没有reranker，直接取前K个作为结果
+            # 优先使用BM25分数排序
+            for c in candidates:
+                c["score"] = c.get("bm25_score", 0) if "bm25_score" in c else (1.0 - c.get("distance", 1.0))
+            candidates.sort(key=lambda x: x["score"], reverse=True)
+            top5 = candidates[:k]
 
         return [
             {

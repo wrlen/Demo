@@ -1,5 +1,12 @@
 import os
+import ssl
 from dotenv import load_dotenv
+
+# 使用 HuggingFace 镜像源解决 SSL 证书问题
+os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+
+# 禁用 SSL 证书验证以解决证书问题
+ssl._create_default_https_context = ssl._create_unverified_context
 
 load_dotenv()
 

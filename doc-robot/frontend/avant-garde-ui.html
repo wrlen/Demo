@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档机器人 - 前卫设计</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f7ff;
+            --secondary: #ff00c8;
+            --accent: #ff9900;
+            --dark: #0a0a12;
+            --light: #f0f0f5;
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 10% 20%, rgba(0, 247, 255, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 200, 0.05) 0%, transparent 20%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .mode-btn {
+            padding: 1rem 2rem;
+            background: var(--card-bg);
+            color: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-btn:hover {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: var(--dark);
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+        }
+
+        .mode-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 247, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+
+        .mode-btn:hover::before {
+            left: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--light);
+            border-radius: 0;
+            font-family: 'Inter', sans-serif;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--light);
+            border-radius: 0;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        .form-textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: transparent;
+            color: var(--light);
+            border: 2px solid var(--primary);
+            border-radius: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            color: var(--dark);
+            background: var(--primary);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 247, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+
+        .response-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .response-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .sources-container {
+            background: rgba(0, 247, 255, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 0.5rem 1rem;
+            margin-top: 1rem;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9rem;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 0;
+            margin-bottom: 1rem;
+        }
+
+        .success-message {
+            background: rgba(0, 247, 255, 0.1);
+            border-left: 4px solid var(--primary);
+        }
+
+        .error-message {
+            background: rgba(255, 0, 200, 0.1);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .info-message {
+            background: rgba(255, 153, 0, 0.1);
+            border-left: 4px solid var(--accent);
+        }
+
+        .expander {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .expander-header {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: none;
+            color: var(--light);
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: var(--transition);
+        }
+
+        .expander-header:hover {
+            background: rgba(0, 247, 255, 0.1);
+        }
+
+        .expander-content {
+            padding: 1rem;
+            display: none;
+        }
+
+        .expander.active .expander-content {
+            display: block;
+        }
+
+        .floating-element {
+            animation: float 8s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10px, 10px) rotate(2deg);
+            }
+            50% {
+                transform: translate(-10px, 5px) rotate(-2deg);
+            }
+            75% {
+                transform: translate(5px, -10px) rotate(1deg);
+            }
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        @media (max-width: 768px) {
+            .mode-selector {
+                flex-direction: column;
+            }
+
+            .card-title {
+                font-size: 1.5rem;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">📚 文档机器人</div>
+        </header>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="qa">💬 智能问答</button>
+            <button class="mode-btn" data-mode="update">🔄 文档更新</button>
+            <button class="mode-btn" data-mode="feedback">📊 用户反馈</button>
+        </div>
+
+        <!-- 智能问答模式 -->
+        <div id="qa-mode" class="card">
+            <h2 class="card-title">智能问答</h2>
+            <div class="form-group">
+                <label class="form-label">输入你的问题</label>
+                <textarea id="qa-question" class="form-textarea" rows="3" placeholder="例如：如何配置数据库连接？"></textarea>
+            </div>
+            <button id="qa-submit" class="btn">提问</button>
+
+            <div id="qa-response" class="response-container" style="display: none;">
+                <h3 class="response-title">回答</h3>
+                <div id="qa-answer"></div>
+                <div id="qa-sources" class="sources-container"></div>
+            </div>
+        </div>
+
+        <!-- 文档更新模式 -->
+        <div id="update-mode" class="card" style="display: none;">
+            <h2 class="card-title">文档更新 Agent</h2>
+            <div class="form-group">
+                <label class="form-label">Changelog</label>
+                <textarea id="update-changelog" class="form-textarea" rows="6" placeholder="## 2026-05-11
+- 新增：API 认证从 Token 改为 OAuth2
+- 修改：数据库端口从 3306 改为 3307
+- 删除：/v1/old-api 接口"></textarea>
+            </div>
+            <button id="update-analyze" class="btn">🚀 分析 Changelog</button>
+
+            <div id="update-preview" style="display: none;">
+                <h3 style="color: var(--primary); margin: 1.5rem 0;">变更预览</h3>
+                <div id="update-previews"></div>
+            </div>
+        </div>
+
+        <!-- 用户反馈模式 -->
+        <div id="feedback-mode" class="card" style="display: none;">
+            <h2 class="card-title">用户反馈</h2>
+            <div class="form-group">
+                <label class="form-label">会话 ID</label>
+                <input type="text" id="fb-session" class="form-input" value="default">
+            </div>
+            <div class="form-group">
+                <label class="form-label">原始问题</label>
+                <textarea id="fb-question" class="form-textarea" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">系统回答</label>
+                <textarea id="fb-answer" class="form-textarea" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">评分</label>
+                <div>
+                    <input type="radio" id="fb-up" name="fb-rating" value="up" checked>
+                    <label for="fb-up">👍 赞同</label>
+                    <input type="radio" id="fb-down" name="fb-rating" value="down">
+                    <label for="fb-down">👎 不赞同</label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">反馈原因（可选）</label>
+                <textarea id="fb-reason" class="form-textarea" rows="2"></textarea>
+            </div>
+            <button id="fb-submit" class="btn">📤 提交反馈</button>
+            <div id="fb-result"></div>
+        </div>
+
+        <footer>
+            <p>📚 技术文档智能问答与更新机器人</p>
+            <p>© 2026 文档机器人</p>
+        </footer>
+    </div>
+
+    <script>
+        // 切换模式
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 移除所有活动状态
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.card').forEach(c => c.style.display = 'none');
+
+                // 添加当前活动状态
+                btn.classList.add('active');
+
+                // 显示对应模式
+                const mode = btn.dataset.mode;
+                if (mode === 'qa') {
+                    document.getElementById('qa-mode').style.display = 'block';
+                } else if (mode === 'update') {
+                    document.getElementById('update-mode').style.display = 'block';
+                } else if (mode === 'feedback') {
+                    document.getElementById('feedback-mode').style.display = 'block';
+                }
+            });
+        });
+
+        // 智能问答功能
+        document.getElementById('qa-submit').addEventListener('click', async () => {
+            const question = document.getElementById('qa-question').value;
+            if (!question.trim()) {
+                alert('请输入问题');
+                return;
+            }
+
+            const responseContainer = document.getElementById('qa-response');
+            responseContainer.style.display = 'none';
+
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        session_id: 'default'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('qa-answer').textContent = data.answer;
+                    if (data.sources && data.sources.length > 0) {
+                        document.getElementById('qa-sources').textContent = '参考文档：' + data.sources.join(', ');
+                    } else {
+                        document.getElementById('qa-sources').textContent = '';
+                    }
+                    responseContainer.style.display = 'block';
+                } else {
+                    alert('请求失败');
+                }
+            } catch (error) {
+                alert('连接错误：' + error.message);
+            }
+        });
+
+        // 文档更新功能
+        document.getElementById('update-analyze').addEventListener('click', async () => {
+            const changelog = document.getElementById('update-changelog').value;
+            if (!changelog.trim()) {
+                alert('请输入 Changelog');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/agent', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        changelog: changelog
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.status === 'pending_confirm' && data.previews) {
+                        const previewsDiv = document.getElementById('update-previews');
+                        previewsDiv.innerHTML = '';
+
+                        data.previews.forEach((preview, index) => {
+                            const updateCard = document.createElement('div');
+                            updateCard.className = 'expander';
+                            updateCard.innerHTML = `
+                                <button class="expander-header">变更 ${index + 1}: ${data.updates[index].file_path}</button>
+                                <div class="expander-content">
+                                    <pre>${preview}</pre>
+                                    <div style="margin-top: 1rem;">
+                                        <input type="checkbox" id="confirm-${index}">
+                                        <label for="confirm-${index}">确认提交此变更</label>
+                                    </div>
+                                </div>
+                            `;
+                            previewsDiv.appendChild(updateCard);
+                        });
+
+                        // 绑定展开事件
+                        document.querySelectorAll('.expander-header').forEach(header => {
+                            header.addEventListener('click', function() {
+                                this.parentElement.classList.toggle('active');
+                            });
+                        });
+
+                        document.getElementById('update-preview').style.display = 'block';
+                    } else {
+                        alert(data.summary || '分析完成');
+                    }
+                } else {
+                    alert('请求失败');
+                }
+            } catch (error) {
+                alert('连接错误：' + error.message);
+            }
+        });
+
+        // 用户反馈功能
+        document.getElementById('fb-submit').addEventListener('click', async () => {
+            const session = document.getElementById('fb-session').value;
+            const question = document.getElementById('fb-question').value;
+            const answer = document.getElementById('fb-answer').value;
+            const rating = document.querySelector('input[name="fb-rating"]:checked').value;
+            const reason = document.getElementById('fb-reason').value;
+
+            if (!question || !answer) {
+                alert('请填写问题和回答');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: session,
+                        question: question,
+                        answer: answer,
+                        rating: rating,
+                        reason: reason
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('fb-result').innerHTML = '<div class="message success-message">反馈已记录！</div>';
+                } else {
+                    document.getElementById('fb-result').innerHTML = '<div class="message error-message">提交失败</div>';
+                }
+            } catch (error) {
+                document.getElementById('fb-result').innerHTML = '<div class="message error-message">连接错误：' + error.message + '</div>';
+            }
+        });
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 默认显示问答模式
+            document.getElementById('qa-mode').style.display = 'block';
+
+            // 为展开组件添加点击事件
+            document.querySelectorAll('.expander-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    this.parentElement.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

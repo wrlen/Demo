@@ -1,0 +1,33 @@
+# Environment
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Database
+chroma_db/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Feedback data
+feedback.jsonl

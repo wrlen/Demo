@@ -1,6 +1,7 @@
 import re
 import json
 import time
+import sys
 from pathlib import Path
 
 FEEDBACK_FILE = Path("feedback.jsonl")
@@ -29,13 +30,17 @@ def check_input(query: str) -> tuple[bool, str]:
     Returns:
         (is_safe, error_message)
     """
-    if len(query) > MAX_QUERY_LENGTH:
-        return False, f"查询长度超过限制（{MAX_QUERY_LENGTH}字符）"
+    try:
+        if len(query) > MAX_QUERY_LENGTH:
+            return False, f"查询长度超过限制（{MAX_QUERY_LENGTH}字符）"
 
-    if INJECTION_PATTERNS.search(query):
-        return False, "查询包含不安全的代码模式，已被拒绝"
+        if INJECTION_PATTERNS.search(query):
+            return False, "查询包含不安全的代码模式，已被拒绝"
 
-    return True, ""
+        return True, ""
+    except Exception as e:
+        print(f"check_input错误: {e}", file=sys.stderr)
+        return True, ""
 
 
 def check_output(answer: str) -> tuple[bool, str]:
@@ -44,9 +49,13 @@ def check_output(answer: str) -> tuple[bool, str]:
     Returns:
         (is_safe, safe_answer)
     """
-    if HALLUCINATION_KEYWORDS.search(answer):
-        return False, SAFE_REPLY
-    return True, answer
+    try:
+        if HALLUCINATION_KEYWORDS.search(answer):
+            return False, SAFE_REPLY
+        return True, answer
+    except Exception as e:
+        print(f"check_output错误: {e}", file=sys.stderr)
+        return True, answer
 
 
 def record_feedback(

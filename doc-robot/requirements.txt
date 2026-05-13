@@ -1,13 +1,26 @@
+# FastAPI & Uvicorn
 fastapi==0.136.1
 uvicorn==0.46.0
+
+# LangChain
 langchain==1.2.18
 langchain-openai==1.2.1
 langchain-chroma==1.1.0
 langchain-community==0.4.1
-chromadb>=0.6.3,<2.0.0
+
+# Vector DB
+chromadb==0.6.3
+
+# Embedding & Reranking
 sentence-transformers==3.4.1
 rank-bm25==0.2.2
+
+# Git Integration
 gitpython==3.1.50
+
+# Frontend
 streamlit==1.57.0
+
+# Utilities
 python-dotenv==1.2.2
 pydantic==2.13.3
